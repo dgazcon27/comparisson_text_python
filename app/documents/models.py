@@ -1,9 +1,10 @@
 from flask_login import UserMixin
 from sqlalchemy.exc import IntegrityError
-from run import db, app
+from app import db
 from os.path import join
 from io import StringIO
 import re
+from app import upload_folder
 
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
@@ -11,8 +12,6 @@ from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
-
-
 
 class Document(db.Model):
 
@@ -38,8 +37,8 @@ class Document(db.Model):
         return Document.query.filter_by(title=self.title).first()
 
     def get_stats_coincidence(self):
-        upload_folder = app.config['UPLOAD_FOLDER']
-        document = join(upload_folder, self.title)
+        folder = upload_folder
+        document = join(folder, self.title)
         text_process = self.get_text_from_pdf(document)
         print(text_process)
         # documents_list = Document.query.filter(Document.title != self.title).all()
