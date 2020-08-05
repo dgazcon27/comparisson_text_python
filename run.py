@@ -55,15 +55,17 @@ def upload():
     if form.validate_on_submit():
         file = form.upload.data
         if file:
-            image_name = secure_filename(file.filename)
-            images_dir = app.config['UPLOAD_FOLDER']
-            os.makedirs(images_dir, exist_ok=True)
-            file_path = os.path.join(images_dir, image_name)
-            file.save(file_path)
-            document = Document(user_id=current_user.id, title= image_name)
-            document.save()
-            doc_uploaded = document.get_stats_coincidence()
-            
+            doc_name = secure_filename(file.filename)
+            docs_dir = app.config['UPLOAD_FOLDER']
+            document = Document(user_id=current_user.id, title= doc_name)
+            check_document = document.get_by_title()
+            if check_document is None:
+                document.save()
+                os.makedirs(docs_dir, exist_ok=True)
+                file_path = os.path.join(docs_dir, document.title)
+                file.save(file_path)
+                doc_uploaded = document.get_stats_coincidence()
+
             return redirect(url_for('index'))
     return render_template("admin/upload_form.html", form=form)    
 

@@ -34,8 +34,21 @@ class Document(db.Model):
                 count += 1
                 self.title = f'{self.title}-{count}'
 
+    def get_by_title(self):
+        return Document.query.filter_by(title=self.title).first()
+
+    def get_stats_coincidence(self):
+        upload_folder = app.config['UPLOAD_FOLDER']
+        document = join(upload_folder, self.title)
+        text_process = self.get_text_from_pdf(document)
+        print(text_process)
+        # documents_list = Document.query.filter(Document.title != self.title).all()
+        # for docs in documents_list:
+        #     doc_list_process = 
+        return None
+
     def get_text_from_pdf(self, url):
-        regex = r"/\t|\n|\,|\.|\:|\;|\(|\)|\{|\}|\?|\¿|\"|\'|\_|\-|\]|\[/g"
+        regex = r"/\t|\n|\/|\,|\.|\:|\;|\(|\)|\{|\}|\?|\¿|\"|\'|\_|\-|\]|\[/g"
         process_text = None
         output_string = StringIO()
         with open(url, 'rb') as in_file:
@@ -46,16 +59,10 @@ class Document(db.Model):
             interpreter = PDFPageInterpreter(rsrcmgr, device)
             for page in PDFPage.create_pages(doc):
                 interpreter.process_page(page)
-        process_text = output_string.getvalue() 
+        process_text = output_string.getvalue()
         if len(process_text) > 0:
             process_text = process_text.lower()
-            process_text = re.sub(regex,"", process_text).split(" ")
+            process_text = re.sub(regex,"", process_text)
+            process_text = re.sub(r'\d+', '', process_text)
+            process_text = re.split("  *", process_text)
         return process_text
-
-    def get_stats_coincidence(self):
-        upload_folder = app.config['UPLOAD_FOLDER']
-        document = join(upload_folder, self.title)
-        x = self.get_text_from_pdf(document)
-
-        print(x[len(x)-1])
-        return None
