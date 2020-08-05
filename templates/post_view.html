@@ -1,0 +1,10 @@
+{% extends "base_template.html" %}
+
+{% block title %}{{ post.title_slug }}{% endblock %}
+
+{% block content %}
+    <h3>Mostrando el post {{ post.title }}</h3>
+    <div>
+    	{{ post.content }}
+    </div>
+{% endblock %}
