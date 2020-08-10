@@ -13,6 +13,9 @@ from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 
+from nltk import ngrams
+
+
 class Document(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
@@ -40,11 +43,49 @@ class Document(db.Model):
         folder = upload_folder
         document = join(folder, self.title)
         text_process = self.get_text_from_pdf(document)
-        print(text_process)
-        # documents_list = Document.query.filter(Document.title != self.title).all()
-        # for docs in documents_list:
-        #     doc_list_process = 
+        # Getting list of documents stored
+        documents_list = Document.query.filter(Document.title != self.title).all()
+        # docs_pro = self.get_text_from_pdf(join(folder, docs.title))
+        # Check documents using ngram method
+        result_ngram = self.compare_ngram(text_process, documents_list)
+        print(result_ngram)
         return None
+
+    def compare_ngram(self, doc_up, list_store_doc, n=3):
+        folder = upload_folder
+        tgram_up = list(ngrams(doc_up, n))
+        list_result = []
+        list_merge = []
+        for doc in list_store_doc:
+            docs_pro = self.get_text_from_pdf(join(folder, doc.title))
+            doc_tgram = list(ngrams(docs_pro, n))
+            common = []
+            for gram in tgram_up:
+                if gram in doc_tgram:
+                    common.append(gram)
+            if len(common) > 0:
+                uniq_gram = self.remove_duplicate(common)
+                total_grams = self.remove_duplicate(tgram_up+doc_tgram)
+                total_result = '{:.4f}'.format((len(uniq_gram)/len(total_grams))*100)
+                list_result.append({"ngram": total_result, "suspect": doc.id, "name": doc.title})
+        return list_result
+
+    def remove_duplicate(self, list_of_item):
+        unique = list(dict.fromkeys(list_of_item))
+        return unique
+
+    def print_list(self, list3):
+        for x in list3:
+            print(x)
+        print("\n")
+
+    def merge_ngrams(self, list1, list2):
+        for item in list2:
+            list1.append(item2)
+        # for item in list1:
+        #     if item not in list2:
+        #         list_items.append(item)
+        return list1
 
     def get_text_from_pdf(self, url):
         regex = r"/\t|\n|\/|\,|\.|\:|\;|\(|\)|\{|\}|\?|\¿|\"|\'|\_|\-|\]|\[/g"
@@ -65,3 +106,5 @@ class Document(db.Model):
             process_text = re.sub(r'\d+', '', process_text)
             process_text = re.split("  *", process_text)
         return process_text
+
+    
